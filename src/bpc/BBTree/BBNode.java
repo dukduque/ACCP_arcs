@@ -294,7 +294,6 @@ public class BBNode {
 						}
 					}
 				}
-
 			}
 		}
 	}
@@ -336,7 +335,6 @@ public class BBNode {
 					set.add(theInt < mVal ? l : l + 1, theInt);
 				} else if (r == m) {
 					System.out.println("esto no pasa !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!11 LSET ALGO ");
-//					L.add(cScore > mVal ? r : Math.min(r + 1, L.size()), np);
 				} else {
 					System.err.println( " insert label, error");
 				}

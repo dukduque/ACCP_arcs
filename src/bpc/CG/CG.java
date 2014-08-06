@@ -115,7 +115,7 @@ public class CG {
 	 * @throws GRBException
 	 */
 	private void saveMPSolution(BBNode currentNode) throws GRBException {
-		boolean bol = algorithm.saveMPRelaxSolution(currentNode);
+		boolean bol = algorithm.saveX_ijVariables(currentNode);
 		currentNode.feasibleXijflows = bol;
 		currentNode.setSum_X_i(algorithm.getSumOfXi());
 		currentNode.setBasicCardinality(algorithm.getBasicsIndexes().size());

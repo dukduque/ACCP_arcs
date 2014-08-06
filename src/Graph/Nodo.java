@@ -80,10 +80,13 @@ public class Nodo {
 	
 	
 	/**
-	 * ArrayList which stores a list of indexes of the arcs where this node is
-	 * tail
+	 * ArrayList which stores a list of indexes of the arcs that has this node is tail
 	 */
 	public ArrayList<Integer> MagicIndex;
+	
+	/**
+	 * ArrayList which stores a list of indexes of the arcs that has this node head
+	 */
 	public ArrayList<Integer> rMagicIndex;	
 	
 	/**
@@ -104,7 +107,6 @@ public class Nodo {
 	private boolean firstTime;
 	
 	private ArrayList<Label> labels;
-
 	
 	
 	/**
@@ -234,8 +236,6 @@ public class Nodo {
 			}
 			path.remove((path.size() - 1));
 		}
-		
-
 	}
 
 

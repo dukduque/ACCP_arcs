@@ -399,7 +399,6 @@ public class LP_Manager {
 						counter++;
 					}
 					if(counter>=2){
-						
 						j=10000000;
 						CM.cutQSetsRoutes.get(cutName).add(k);
 						CM.cuts.get(cutIndex).addTerm(1, model.getVar(k));
@@ -436,7 +435,7 @@ public class LP_Manager {
 			try {
 				 rc = mp_vars.get(i).get(GRB.DoubleAttr.RC);
 			} catch (Exception e) {
-//				System.out.println("La variable que jode es la " + i + " hay en el pool: " + pool.size()+"el prob status es igual " + model.get(GRB.IntAttr.Status));
+				System.out.println("La variable que jode es la " + i + " hay en el pool: " + pool.size()+"el prob status es igual " + model.get(GRB.IntAttr.Status));
 			}
 
 			double val = mp_vars.get(i).get(GRB.DoubleAttr.X);
@@ -454,12 +453,13 @@ public class LP_Manager {
 	}
 	
 	/**
-	 * 
-	 * @param currentNode 
-	 * @throws GRBException
-	 * @return true if the x_ij variables are feasible (ie. x_ij \in {0,1})
+	 * This method saves the value of the x_ij variables. In this case, of the time-space network
+	 * of related to the subproblem of the ACPP
+	 * @param currentNode The node of the B&B tree
+	 * @throws GRBException If the value of MP variables is not available .get(GRB.DoubleAttr.X);
+	 * @return true if the x_ij variables are feasible (i.e. x_ij \in {0,1})
 	 */
-	public boolean saveMPRelaxSolution(BBNode currentNode) throws GRBException{
+	public boolean saveX_ijVariables(BBNode currentNode) throws GRBException{
 		X_ijVars = new ArrayList<>();
 		X_ij = new Hashtable<>(Network.numArcs);
 		X_ij_tail = new Hashtable<>();
@@ -473,7 +473,7 @@ public class LP_Manager {
 		for (int i = 0; i < X_ijVars.size(); i++) {
 			double val = X_ij.get(X_ijVars.get(i));
 			//TODO revisar esta condición
-			if(val<=0.999){
+			if(val<=0.999 || val >=1.0001){
 				return false;
 			}
 		}
@@ -606,12 +606,15 @@ public class LP_Manager {
 	}
 
 	/**
-	 * this method provides the linear expression to branch on a xij fractional variable.
-	 * The variable is chose according to the branch policy given as parameter. 
+	 * this method branches on a xij fractional variables. The method selects one x_ij fractional variable and 
+	 * generates two arraylist of integers that contains the indexes of the master problem (MP) variables that need to be set to zero.
+	 * For branch x_ij = 0, the corresponding MP variables are those that the associated path contains the arc.
+	 * For branch x_ij = 1, the corresponding MP variables are those that the associated path contains the arcs (i',j) and (i,j').
+	 * The variable x_ij is chose according to the branch policy given as parameter. 
 	 * @param currentBBNode The branch and bound node that is being branched
 	 * @param branchPolicy the branching policy
 	 * @param model the gurobi model
-	 * @return two list of the routes that must be set to zero, one  for each branch.
+	 * @return two lists of the routes that must be set to zero, one for each branch.
 	 */
 	public ArrayList<Integer>[] genXijBranching(BBNode currentBBNode, int branchPolicy) {
 		boolean selected = false;
@@ -637,17 +640,17 @@ public class LP_Manager {
 				
 			}else if(BPC_Algorithm.BP_MOST_INFEASIBLE_BRANCHING == branchPolicy){			
 				double minDesVsdest= Double.POSITIVE_INFINITY;
-				double centerVal = 0.5;
+				double centerVal = 0.1;
 				for (int i = 0; i < X_ijVars.size() ; i++) {
 					String strInd  = X_ijVars.get(i);
 					double varVal = (X_ij.get(strInd));
 //					if (varVal!=1 && varVal!=0 && Math.abs(varVal - centerVal)  < minDesVsdest ) {
 					if (varVal < 1 && varVal > 0
-							&& Math.abs(varVal - centerVal) < minDesVsdest
-							&& X_ij_tail.get(strInd) != Network.source
-							&& X_ij_head.get(strInd) != Network.sink) {
-//							&& X_ij_arc.get(strInd).getType()==Arco.TYPE_WAIT
-//							&& X_ij_arc.get(strInd).getTail().getType()!=Nodo.NODE_TYPE_OPP) {
+							&& Math.abs(varVal - centerVal) < minDesVsdest){
+//							&& X_ij_tail.get(strInd) != Network.source
+//							&& X_ij_head.get(strInd) != Network.sink
+//							&& X_ij_arc.get(strInd).getType()!=Arco.TYPE_FIGHT
+//							&& X_ij_arc.get(strInd).getType()==Arco.TYPE_DEADHEAD) {
 						minDesVsdest =Math.abs(varVal - centerVal) ; 
 						minVarVal = varVal;
 						key = X_ijVars.get(i);
@@ -764,10 +767,11 @@ public class LP_Manager {
 
 	
 	private void updateX_ij(int routeIndex, double varValue, BBNode currentNode){
-//		ArrayList<Integer> pairingLegs = pool.get(routeIndex);
+
 		ArrayList<Integer> pairingArcs = pool_of_arcs.get(routeIndex);
-		for (int i = 0; i < pairingArcs.size()-1; i++) {
+		for (int i = 0; i < pairingArcs.size(); i++) {
 			Arco arc = network.getArcs().get(pairingArcs.get(i));
+			if(arc.getType() != Arco.TYPE_DEADHEAD){
 			int node_i = arc.getTail().id;
 			int node_j = arc.getHead().id;
 			
@@ -782,21 +786,10 @@ public class LP_Manager {
 				X_ijVars.add(key);
 				X_ij.put(key,  (varValue));
 			}
-			
 			if (X_ij.get(key)>1.000001) {
 //				System.out.println("\nERROR: La variables x_("+ node_i+ ", "+node_j+") toma un valor mayor a 1: " + X_ij.get(key));
-				
-//					try {
-////						System.out.println(currentNode.toString(null));
-//					} catch (GRBException e) {
-
-//						e.printStackTrace();
-//					}
-				
-//					System.out.println(pool.get(routeIndex) + " ->  " + varValue + " gen: " + generator.get(routeIndex) + "  dist: " + pDist.get(routeIndex) + " index: "+ routeIndex);	
-				
 			}
-			
+			}
 		}
 
 	}
