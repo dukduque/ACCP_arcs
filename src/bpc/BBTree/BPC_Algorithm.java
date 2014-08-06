@@ -83,6 +83,8 @@ public class BPC_Algorithm {
 	
 	private DataHandler data;
 	
+	private Network network;
+	
 	public BPC_Algorithm(DataHandler data, Network network) throws GRBException {
 		this.data = data;
 		globalEnv = new GRBEnv(null);
@@ -99,7 +101,7 @@ public class BPC_Algorithm {
 		CM = new CutsManager();
 		algorithm = new LP_Manager(CM, data, network);
 		cgSolver = new CG(data, network, algorithm, CM, globalEnv, baseModel);
-		
+		this.network = network;
 		//control parameters
 		currentBranchPolicy = BP_MOST_INFEASIBLE_BRANCHING;
 		nodeSelection =  ns_BLS;
@@ -129,7 +131,7 @@ public class BPC_Algorithm {
 		while(activeNodes.size()>0){
 			iter++;
 			current = selectNode(activeNodes); //Select a node according to the nodeSelection policy
-			current.updateRouteInLB(algorithm);
+			current.updateRouteInLB(algorithm, network);
 			algorithm.setUpNetwork(current); //"build" the sub-problem network for this node
 			algorithm.setUpModel(current);//"build" the master problem for this node
 			
@@ -406,7 +408,7 @@ public class BPC_Algorithm {
 		msn += "\tBestSol: " + BB_primalBound;
 		msn +=  "\tgap: " +Math.round(((BB_primalBound-BB_bestbound)/BB_primalBound)*1000)/1000.0;
 		msn += "\tActNodes: " + activeNodes.size() + "\t";
-		msn += current.xijBranchInThisNode[0]+ " "+current.xijBranchInThisNode[1];
+		msn += current.xijBranchInThisNode+ " -> ";
 		
 		System.out.println(msn);
 		

@@ -110,8 +110,8 @@ public class Network {
 		for (int i = 0; i < arc_graph.size(); i++) {
 			arc = arc_graph.get(i);
 			arc.setId(i);
-			tail = arc.getTail();
-			head = arc.getHead();
+			tail = arc.get_v_i();
+			head = arc.get_v_j();
 			if (tail.id == source) {
 				head.rMagicIndex.add(0, i);
 			} else {
@@ -333,10 +333,10 @@ public class Network {
 	public void checkNetworkCorrectness() {
 		for (int i = 0; i < arc_graph.size(); i++) {
 			Arco a = arc_graph.get(i);
-			if (a.getTail().id >= a.getHead().id) {
-				System.err.println("NOP TOPO" + a.getType()  +  "\n" + a.getTail() +  "\n" + a.getHead()  + "\n over : " + a.getTail().getNextday());
+			if (a.get_v_i().id >= a.get_v_j().id) {
+				System.err.println("NOP TOPO" + a.getType()  +  "\n" + a.get_v_i() +  "\n" + a.get_v_j()  + "\n over : " + a.get_v_i().getNextday());
 			}
-			if(a.getTail().getAbsTime()> a.getHead().getAbsTime()){
+			if(a.get_v_i().getAbsTime()> a.get_v_j().getAbsTime()){
 				System.err.println("TIME ERROR");
 			}
 			a.checkTypeArcCorrectness(stations);
@@ -353,7 +353,7 @@ public class Network {
 		for (int i = 0; i < arc_graph.size(); i++) {
 			arc = arc_graph.get(i);
 			if( arc.getType() == Arco.TYPE_FIGHT){
-				arc.c_ij = -algorithm.pi[arc.getTail().getLegId()];
+				arc.c_ij = -algorithm.pi[arc.get_v_i().getLegId()];
 			}
 		}
 		
@@ -369,6 +369,42 @@ public class Network {
 
 	public  ArrayList<Arco> getArcs() {
 		return arc_graph;
+	}
+	
+	/**
+	 * Returns the arc specified as a parameter
+	 * @param id Arc Id
+	 * @return the arc object
+	 */
+	public  Arco getArc(int id) {
+		return arc_graph.get(id);
+	}
+
+
+
+
+
+	public Arco getArcByNodes(int v_i, int v_j, int typeFight) {
+		ArrayList<Integer> magicIndex_dep = nodes_graph.get(v_i).MagicIndex;
+		Arco arc;
+		for (int i = 0; i < magicIndex_dep.size(); i++) {
+			arc = arc_graph.get(magicIndex_dep.get(i));
+			int head = arc.get_v_j().id;
+			int type = arc.getType();
+			if (head == v_j && typeFight == type) {
+				return arc;
+			}
+		}
+		return null;
+	}
+
+
+
+
+
+	public Nodo getNode(int i) {
+		// TODO Auto-generated method stub
+		return nodes_graph.get(i);
 	}
 
 

@@ -45,7 +45,7 @@ public class FinalLeg extends Nodo {
 			node = PulseAlgorithm.network.getNodes().get(path.get(i));
 			arc =  PulseAlgorithm.network.getArcs().get(path_arcs.get(i));
 			type = arc.getType();
-			if(arc.getTail().equals(node)){
+			if(arc.get_v_i().equals(node)){
 				if(node.getType() == Nodo.NODE_TYPE_DEP && type == Arco.TYPE_FIGHT){
 					dummyPath.add(node.getLegId());
 				}

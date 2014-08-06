@@ -126,7 +126,7 @@ public class PulseAlgorithm {
 			for (int j = 0; j < v_i.MagicIndex.size(); j++) {
 				arcIndex = v_i.MagicIndex.get(j);
 				arc = network.getArcs().get(arcIndex);
-				v_j = arc.getHead();
+				v_j = arc.get_v_j();
 				if(v_i.f_SP + arc.c_ij < v_j.f_SP){
 					v_j.f_SP = v_i.f_SP + arc.c_ij;
 				}
@@ -140,7 +140,7 @@ public class PulseAlgorithm {
 			for (int j = 0; j < v_i.rMagicIndex.size(); j++) {
 				arcIndex = v_i.rMagicIndex.get(j);
 				arc = network.getArcs().get(arcIndex);
-				v_j = arc.getTail();
+				v_j = arc.get_v_i();
 
 				if (v_i.b_SP + arc.c_ij < v_j.b_SP) {
 					v_j.b_SP = v_i.b_SP + arc.c_ij;

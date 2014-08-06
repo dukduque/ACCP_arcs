@@ -76,10 +76,13 @@ public class BBNode {
 	 */
 	public  int id;
 	
-	public int[] xijBranchInThisNode;
-	public ArrayList<int[]> branchedXij;
+	public int xijBranchInThisNode;
+	
+	/**
+	 * Index of the arc (i,j) on the complete list of arcs in class {@link Network}
+	 */
+	public ArrayList<Integer> branchedXij;
 	public ArrayList<Integer> branchedXijValue;
-//	public ArrayList<ArrayList<Integer>> branchdXijRoutesInLB;
 	
 	/**
 	 * List of the routes ids that were set to 0 due to x_ij branch
@@ -129,7 +132,7 @@ public class BBNode {
 			rightChild = null;
 			cutsIndexes = new ArrayList<>();
 			active = true;
-			xijBranchInThisNode = new int[2];
+			xijBranchInThisNode = -1;
 			branchedXij = new ArrayList<>();
 			branchedXijValue = new ArrayList<>();
 //			branchdXijRoutesInLB = new ArrayList<>();
@@ -143,7 +146,7 @@ public class BBNode {
 			cutsIndexes = new ArrayList<>();
 			cutsIndexes.addAll(nParent.cutsIndexes);
 			active = true;
-			xijBranchInThisNode = new int[2];
+			xijBranchInThisNode = -1;
 			branchedXij = new ArrayList<>();
 			branchedXij.addAll(nParent.branchedXij);
 			branchedXijValue = new ArrayList<>();
@@ -222,8 +225,8 @@ public class BBNode {
 //		}
 		msn+= " EXE: " + ((System.currentTimeMillis()-LP_Manager.tnow)/1000.0);
 		for (int i = 0; i < branchedXij.size(); i++) {
-			int[] x = branchedXij.get(i);
-			msn += "x("+ x[0] + "," + x[1] + ") =" +branchedXijValue.get(i) + "\t"					;
+			int x = branchedXij.get(i);
+			msn += "Arc("+ x+ ") =" +branchedXijValue.get(i) + "\t"					;
 		}
 		//msn+= "---------------------------------------------------------------\n";
 
@@ -249,18 +252,19 @@ public class BBNode {
 	}
 
 
-	public void updateRouteInLB(LP_Manager algorithm) {
+	public void updateRouteInLB(LP_Manager algorithm, Network network) {
 		if (routesInLB.size()==0) {
 			return;
 		}
 		int biggerIndex = routesInLB.get(routesInLB.size()-1);
 		ArrayList<Integer> routesXij;
-		for (int k = 0; k < branchedXij.size(); k++) {
-			int v_i = branchedXij.get(k)[0];
-			int v_j = branchedXij.get(k)[1];
-			int val = branchedXijValue.get(k);
+		for (int a = 0; a < branchedXij.size(); a++) {
+			int arc_id = branchedXij.get(a);
+			int v_i = network.getArc(arc_id).get_v_i().id;
+			int v_j = network.getArc(arc_id).get_v_j().id;
+			int val = branchedXijValue.get(a);
 			if (val == 0) {
-				routesXij = algorithm.routes_per_arc[v_i][v_j];
+				routesXij = algorithm.routes_per_arc[arc_id];
 				for (int j = routesXij.size() - 1; j >= 0; j--) {
 					int route = routesXij.get(j);
 					if (route > biggerIndex) {
@@ -270,9 +274,13 @@ public class BBNode {
 					}
 				}
 			} else {
-				for (int prime = 0; prime < Network.numNodes; prime++) {
-					routesXij = algorithm.routes_per_arc[v_i][prime];
-					if (prime != v_j && routesXij != null) {
+				int NOTUsing_arc_id = -1;
+				// Updated xij' routes
+				ArrayList<Integer> magicIndex_v_i = network.getNodes().get(v_i).MagicIndex;
+				for (int k = 0; k < magicIndex_v_i.size(); k++) {
+					NOTUsing_arc_id = magicIndex_v_i.get(k);
+					routesXij = algorithm.routes_per_arc[NOTUsing_arc_id];
+					if (network.getArc(NOTUsing_arc_id).get_v_j().id != v_j && routesXij != null) {
 						for (int j = routesXij.size() - 1; j >= 0; j--) {
 							int route = routesXij.get(j);
 							if (route > biggerIndex) {
@@ -282,8 +290,13 @@ public class BBNode {
 							}
 						}
 					}
-					routesXij = algorithm.routes_per_arc[prime][v_j];
-					if (prime != v_i && routesXij != null) {
+				}
+				// Update xi'j routes
+				ArrayList<Integer> rMagicIndex_v_j = network.getNode(v_j).rMagicIndex;
+				for (int k = 0; k < rMagicIndex_v_j.size(); k++) {
+					NOTUsing_arc_id = rMagicIndex_v_j.get(k);
+					routesXij = algorithm.routes_per_arc[NOTUsing_arc_id];
+					if (network.getArc(NOTUsing_arc_id).get_v_i().id != v_i && routesXij != null) {	
 						for (int j = routesXij.size() - 1; j >= 0; j--) {
 							int route = routesXij.get(j);
 							if (route > biggerIndex) {
@@ -378,12 +391,12 @@ public class BBNode {
 			for (int j = 0; j < arcs.size(); j++) {
 				Arco arc = PulseAlgorithm.network.getArcs().get(arcs.get(j));
 				if (arc.getType() == Arco.TYPE_FIGHT) {
-					Nodo tail = arc.getHead();
+					Nodo tail = arc.get_v_j();
 					leg = data.getLegs().get(tail.getLegId());
 					System.out.println(+i + "/" + leg + "/"+arc.getTypeName());
 //					System.out.println("" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
 				} else if (arc.getType() == Arco.TYPE_DEADHEAD) {
-					Nodo tail = arc.getTail();
+					Nodo tail = arc.get_v_i();
 					leg = data.getLegs().get(tail.getLegId());
 					System.out.println(i + "/" + leg + "/"+arc.getTypeName());
 //					System.out.println("*" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
@@ -456,12 +469,12 @@ public class BBNode {
 			for (int j = 0; j < arcs.size(); j++) {
 				Arco arc = PulseAlgorithm.network.getArcs().get(arcs.get(j));
 				if (arc.getType() == Arco.TYPE_FIGHT) {
-					Nodo tail = arc.getHead();
+					Nodo tail = arc.get_v_j();
 					leg = data.getLegs().get(tail.getLegId());
 					System.out.println(+i + "/" + leg + "/"+arc.getTypeName()+"/"+index+"/"+ val);
 //					System.out.println("" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
 				} else if (arc.getType() == Arco.TYPE_DEADHEAD) {
-					Nodo tail = arc.getTail();
+					Nodo tail = arc.get_v_i();
 					leg = data.getLegs().get(tail.getLegId());
 					System.out.println(i + "/" + leg + "/"+arc.getTypeName()+"/"+index+"/"+ val);
 //					System.out.println("*" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());

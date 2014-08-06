@@ -61,7 +61,7 @@ public class LP_Manager {
 	/**
 	 * Contains for each arc, a list of all the routes indexes that uses the related arc,
 	 */
-	public ArrayList<Integer>[][] routes_per_arc;
+	public ArrayList<Integer>[] routes_per_arc;
 	
 	/**
 	 * Contains for every node, a list of all the routes index that uses the related node.
@@ -73,28 +73,28 @@ public class LP_Manager {
 	/**
 	 * Table that contains the current value of x_ij variables
 	 */
-	public Hashtable<String, Double> X_ij;
+	public Hashtable<Integer, Double> X_ij;
 
-	/**
-	 * Table that contains a pointer to the arc in the network
-	 */
-	public Hashtable<String, Arco> X_ij_arc;
+//	/**
+//	 * Table that contains a pointer to the arc in the network
+//	 */
+//	public Hashtable<Integer, Arco> X_ij_arc;
+//	
 	
-	
-	/**
-	 * Table that contains the tail id of the arc i,j
-	 */
-	public  Hashtable<String, Integer> X_ij_tail;
-
-	/**
-	 * Table that contains the head id of the arc i,j
-	 */
-	public Hashtable<String, Integer> X_ij_head;
+//	/**
+//	 * Table that contains the tail id of the arc i,j
+//	 */
+//	public  Hashtable<Integer, Integer> X_ij_tail;
+//
+//	/**
+//	 * Table that contains the head id of the arc i,j
+//	 */
+//	public Hashtable<Integer, Integer> X_ij_head;
 
 	/**
 	 * Names of the variables x_ij that take value
 	 */
-	public ArrayList<String> X_ijVars;
+	public ArrayList<Integer> X_ijVars;
 	
 	
 	public static  int maxIterations = 0;
@@ -164,9 +164,8 @@ public class LP_Manager {
 		pDist = new ArrayList<>();
 		generator = new ArrayList<>();
 		pool_of_arcs = new ArrayList<>();
-		routes_per_arc  = new ArrayList[Network.numNodes][Network.numNodes];
+		routes_per_arc  = new ArrayList[Network.numArcs];
 		routes_per_node = new ArrayList[Network.numNodes];
-
 
 
 		basicIndexes = new ArrayList<>();
@@ -460,11 +459,8 @@ public class LP_Manager {
 	 * @return true if the x_ij variables are feasible (i.e. x_ij \in {0,1})
 	 */
 	public boolean saveX_ijVariables(BBNode currentNode) throws GRBException{
-		X_ijVars = new ArrayList<>();
+		X_ijVars = new ArrayList<>(Network.numArcs);
 		X_ij = new Hashtable<>(Network.numArcs);
-		X_ij_tail = new Hashtable<>();
-		X_ij_head = new Hashtable<>();
-		X_ij_arc = new Hashtable<>();
 		for (int j = 0; j < basicIndexes.size(); j++) {
 			int i = basicIndexes.get(j);
 			double val= basicVariables.get(j).get(GRB.DoubleAttr.X);
@@ -527,45 +523,37 @@ public class LP_Manager {
 
 
 	public void setUpNetwork(BBNode currentNode) {
-		DataHandler.forbidden = new int[Network.numNodes][Network.numNodes];
+		DataHandler.forbidden = new int[Network.numArcs];
 		for (int i = 0; i <  currentNode.branchedXij.size(); i++) {
-			int[] arc  = currentNode.branchedXij.get(i);
-			int n_i = arc[0];
-			int n_j = arc[1];
+			int arc_id = currentNode.branchedXij.get(i);
 			int branchedValue = currentNode.branchedXijValue.get(i);
 			if(branchedValue==0){
 				//The arc of the branch is set to 0, then it is forbidden
-				DataHandler.forbidden[n_i][n_j] = 1;
+				DataHandler.forbidden[arc_id] = 1;
 			}else{
-				if(n_i==Network.source){
-					for (int jPrime = 0; jPrime < Network.numNodes ; jPrime++) {
-						if(n_j!=jPrime){
-							DataHandler.forbidden[n_i][jPrime]=1;
-						}
+				int n_i = network.getArc(arc_id).get_v_i().id;
+				int n_j = network.getArc(arc_id).get_v_j().id;
+				int n_arc_id = -1;
+				// forbid xij' arcs
+				ArrayList<Integer> magicIndex_v_i = network.getNodes().get(n_i).MagicIndex;
+				
+				for (int k = 0; k < magicIndex_v_i.size(); k++) {
+					n_arc_id = magicIndex_v_i.get(k);
+					if (network.getArc(n_arc_id).get_v_j().id != n_j) {
+						DataHandler.forbidden[n_arc_id] = 1;
 					}
 				}
-				else if(n_j== Network.sink){
-					for (int iPrime = 0; iPrime < Network.numNodes; iPrime++) {
-						if(iPrime!= n_i){
-							DataHandler.forbidden[iPrime][n_j]=1;
-						}
+				
+				// forbid xij' arcs
+				ArrayList<Integer> rMagicIndex_v_j = network.getNode(n_j).rMagicIndex;
+				for (int k = 0; k < rMagicIndex_v_j.size(); k++) {
+					n_arc_id = rMagicIndex_v_j.get(k);
+					if (network.getArc(n_arc_id).get_v_i().id != n_i) {
+						DataHandler.forbidden[n_arc_id] = 1;
 					}
-				}else{
-					for (int jPrime = 0; jPrime < Network.numNodes; jPrime++) {
-						if(n_j!=jPrime){
-							DataHandler.forbidden[n_i][jPrime]=1;
-						}
-					}
-					for (int iPrime = 0; iPrime < Network.numNodes; iPrime++) {
-						if(iPrime!= n_i){
-							DataHandler.forbidden[iPrime][n_j]=1;
-						}
-					}
-					
 				}
 			}
 		}
-	
 	}
 
 
@@ -618,21 +606,11 @@ public class LP_Manager {
 	 */
 	public ArrayList<Integer>[] genXijBranching(BBNode currentBBNode, int branchPolicy) {
 		boolean selected = false;
-		String key = null;
+		int arc_id = -1;
 		double minVarVal = 0.0;
 		if (X_ijVars != null && X_ij.size() > 0) {
 			if (BPC_Algorithm.BP_RANDOM_BRANCHING == branchPolicy) {
-				boolean condition = true;
-				while (condition) {
-					int r_index = DataHandler.rnd.nextInt( X_ijVars.size());
-					double varVal = X_ij.get(X_ijVars.get(r_index));
-					if (varVal < 1 && (X_ijVars.get(r_index).contains(Network.source + ",")
-									|| X_ijVars.get(r_index).contains("," + Network.sink))) {
-						condition = false;
-						selected = true;
-						key = X_ijVars.get(r_index);
-					}
-				}
+				
 			} else if (BPC_Algorithm.BP_PSEUDOCOST_BRANCHING == branchPolicy) {
 
 
@@ -642,38 +620,34 @@ public class LP_Manager {
 				double minDesVsdest= Double.POSITIVE_INFINITY;
 				double centerVal = 0.1;
 				for (int i = 0; i < X_ijVars.size() ; i++) {
-					String strInd  = X_ijVars.get(i);
-					double varVal = (X_ij.get(strInd));
-//					if (varVal!=1 && varVal!=0 && Math.abs(varVal - centerVal)  < minDesVsdest ) {
+					int testing_arc_id  = X_ijVars.get(i);
+					double varVal = (X_ij.get(testing_arc_id));
 					if (varVal < 1 && varVal > 0
-							&& Math.abs(varVal - centerVal) < minDesVsdest){
-//							&& X_ij_tail.get(strInd) != Network.source
-//							&& X_ij_head.get(strInd) != Network.sink
+							&& Math.abs(varVal - centerVal) < minDesVsdest
+							&& network.getArc(testing_arc_id).get_v_i().id != Network.source
+							&& network.getArc(testing_arc_id).get_v_j().id != Network.sink){
 //							&& X_ij_arc.get(strInd).getType()!=Arco.TYPE_FIGHT
 //							&& X_ij_arc.get(strInd).getType()==Arco.TYPE_DEADHEAD) {
 						minDesVsdest =Math.abs(varVal - centerVal) ; 
 						minVarVal = varVal;
-						key = X_ijVars.get(i);
+						arc_id = X_ijVars.get(i);
 					}
 				}
 			}
 			//Start the expression build up
-			if (key==null) {
+			if (arc_id==-1) {
 				System.out.println(X_ijVars);
 				System.out.println(X_ij);
 			}
-			String[] spKey = key.split(",");
-			System.out.println(key + "-> " + minVarVal + " \t " + X_ij_arc.get(key));
+			System.out.println(arc_id + "-> " + minVarVal + " \t " + network.getArc(arc_id));
 			System.out.println(basicIndexes);
-			int n_i = Integer.parseInt(spKey[0]);
-			int n_j = Integer.parseInt(spKey[1]);
-			currentBBNode.xijBranchInThisNode[0] = n_i;
-			currentBBNode.xijBranchInThisNode[1] = n_j;
-			
+			int n_i = network.getArc(arc_id).get_v_i().id;
+			int n_j =network.getArc(arc_id).get_v_j().id;
+			currentBBNode.xijBranchInThisNode = arc_id;
 			
 			//left expression, xij=0. All routes using the arc i,j come here
 			ArrayList<Integer> routesToLB_left = new ArrayList<>();
-			ArrayList<Integer> routesUsingXij = routes_per_arc[n_i][n_j];
+			ArrayList<Integer> routesUsingXij = routes_per_arc[arc_id];
 			for (int i = 0; i < routesUsingXij.size(); i++) {
 				int number  = routesUsingXij.get(i);
 				if (number < MPvars) {
@@ -685,31 +659,39 @@ public class LP_Manager {
 		
 			//Right expression, xij=1. All routes using (i,j') and (i',j) come here
 			ArrayList<Integer> routesToLB_right = new ArrayList<>();
-			ArrayList<Integer> routesNOTUsingXij ;
-			for (int prime = 0; prime < Network.numNodes; prime++) {
-//				if (n_i != DataHandler.depot) {
-					routesNOTUsingXij = routes_per_arc[n_i][prime];
-					if (prime != n_j && routesNOTUsingXij != null) {// Include xij' routes
-						for (int i = 0; i < routesNOTUsingXij.size(); i++) {
-							int number = routesNOTUsingXij.get(i);
-							if (number < MPvars) {
-								routesToLB_right.add(number);
-							}
+			ArrayList<Integer> routesNOTUsingXij;
+			int NOTUsing_arc_id = -1;
+			
+			// Include xij' routes
+			ArrayList<Integer> magicIndex_v_i = network.getNodes().get(n_i).MagicIndex;
+			for (int k = 0; k < magicIndex_v_i.size(); k++) {
+				NOTUsing_arc_id = magicIndex_v_i.get(k);
+				routesNOTUsingXij = routes_per_arc[NOTUsing_arc_id];
+				if (network.getArc(NOTUsing_arc_id).get_v_j().id != n_j && routesNOTUsingXij != null) {
+					for (int i = 0; i < routesNOTUsingXij.size(); i++) {
+						int number = routesNOTUsingXij.get(i);
+						if (number < MPvars) {   
+							routesToLB_right.add(number);
 						}
 					}
-//				}
-//				if (n_j != DataHandler.depot || n_j!= DataHandler.n+1) {
-					routesNOTUsingXij = routes_per_arc[prime][n_j];
-					if (prime != n_i && routesNOTUsingXij != null) {// Include xi'j routes
-						for (int i = 0; i < routesNOTUsingXij.size(); i++) {
-							int number = routesNOTUsingXij.get(i);
-							if (number < MPvars) {
-								routesToLB_right.add(number);
-							}
-						}
-					}
-//				}
+				}
 			}
+			
+			// Include xi'j routes
+			ArrayList<Integer> rMagicIndex_v_j = network.getNode(n_j).rMagicIndex;
+			for (int k = 0; k < rMagicIndex_v_j.size(); k++) {
+				NOTUsing_arc_id = rMagicIndex_v_j.get(k);
+				routesNOTUsingXij = routes_per_arc[NOTUsing_arc_id];
+				if (network.getArc(NOTUsing_arc_id).get_v_i().id != n_i && routesNOTUsingXij != null) {
+					for (int i = 0; i < routesNOTUsingXij.size(); i++) {
+						int number = routesNOTUsingXij.get(i);
+						if (number < MPvars) {
+							routesToLB_right.add(number);
+						}
+					}
+				}
+			}
+
 			Sort(routesToLB_left);
 			Sort(routesToLB_right);
 			ArrayList[] expresiones = { routesToLB_left, routesToLB_right };
@@ -772,13 +754,11 @@ public class LP_Manager {
 		for (int i = 0; i < pairingArcs.size(); i++) {
 			Arco arc = network.getArcs().get(pairingArcs.get(i));
 			if(arc.getType() != Arco.TYPE_DEADHEAD){
-			int node_i = arc.getTail().id;
-			int node_j = arc.getHead().id;
+			int node_i = arc.get_v_i().id;
+			int node_j = arc.get_v_j().id;
 			
-			String key=node_i+","+node_j;
-			X_ij_arc.put(key, arc);
-			X_ij_tail.put(key, node_i);
-			X_ij_head.put(key, node_j);
+			int key= arc.getId();
+//			X_ij_arc.put(key, arc);
 			if (X_ij.get(key)!=null) {
 				double newVal  = Rounder.round9Dec(X_ij.get(key)+varValue);
 				X_ij.put(key, newVal);
@@ -797,27 +777,20 @@ public class LP_Manager {
 	public void addRoutesToArcs(ArrayList<Integer> dummyPath_of_Arcs, Leg leg) {
 		if(dummyPath_of_Arcs!=null){
 			for (int j = 0; j < dummyPath_of_Arcs.size()-1; j++) {
-				int node_i = network.getArcs().get(dummyPath_of_Arcs.get(j)).getTail().id;
-				int node_j = network.getArcs().get(dummyPath_of_Arcs.get(j)).getHead().id;
-				if (routes_per_arc[node_i][node_j]==null) {
-					routes_per_arc[node_i][node_j] = new ArrayList<Integer>();
+				int arc_id = dummyPath_of_Arcs.get(j);
+				if (routes_per_arc[arc_id] == null) {
+					routes_per_arc[arc_id] = new ArrayList<Integer>();
 				}
-				routes_per_arc[node_i][node_j].add(pool.size());
+				routes_per_arc[arc_id].add(pool.size());
 			}
 		}else{
-			//if is null it's coming from the initialization and a single leg pairing must be set up
-			
+			//if is null it's coming from the initialization and a single leg 
+			//pairing (even if fictional) must be set up
 			int depNode = leg.getDepNodeId();
-			routes_per_arc[network.source][depNode] = new ArrayList<>();
-			routes_per_arc[network.source][depNode].add(pool.size());
 			int arrNode = leg.getArrNodeId();
-			routes_per_arc[arrNode][network.sink]=new ArrayList<>();					
-			routes_per_arc[arrNode][network.sink].add(pool.size());
-			
-			routes_per_arc[depNode][arrNode] = new ArrayList<>();
-			routes_per_arc[depNode][arrNode].add(pool.size());
-			
-			
+			int arc_id = network.getArcByNodes(depNode,arrNode,Arco.TYPE_FIGHT).getId();
+			routes_per_arc[arc_id] = new ArrayList<>();
+			routes_per_arc[arc_id].add(pool.size());
 		}
 	}
 	

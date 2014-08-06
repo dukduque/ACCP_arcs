@@ -129,7 +129,7 @@ public class Arco {
 	 * Devuelve la cola del arco
 	 * @return objeto Leg que representa la cola del arco
 	 */
-	public Nodo getTail(){
+	public Nodo get_v_i(){
 		return v_i;
 	}
 	
@@ -137,7 +137,7 @@ public class Arco {
 	 * Devuelve la cabeza del arco
 	 * @return objeto Leg que representa la cabeza del arco
 	 */
-	public Nodo getHead(){
+	public Nodo get_v_j(){
 		return v_j;
 	}
 	
@@ -240,7 +240,7 @@ public class Arco {
 		}
 
 	public boolean isForbiden() {
-		if(DataHandler.forbidden[v_i.id][v_j.id]==1){
+		if(DataHandler.forbidden[this.id]==1){
 			return true;
 		}else{
 			return false;

@@ -71,7 +71,7 @@ public class DataHandler {
 	private Hashtable<String, String> bases;
 	
 	public static int numLegs;
-	public static int[][] forbidden;
+	public static int[] forbidden;
 	
 	
 	public DataHandler(String inputFile) {

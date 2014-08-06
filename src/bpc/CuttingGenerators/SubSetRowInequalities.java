@@ -65,10 +65,11 @@ public class SubSetRowInequalities {
 		int v_i,v_j;
 		double value =0 ;
 		for (int i = 0; i < algorithm.X_ijVars.size(); i++) {
-			arc = algorithm.X_ijVars.get(i);
+			//TODO todo esto se comento y cambio en el arreglo de los arcos del commite B&P not working due to..!!!
+			arc = null;//algorithm.X_ijVars.get(i);
 //			value = algorithm.X_ij.get(arc);
-			v_i = algorithm.X_ij_tail.get(arc);
-			v_j = algorithm.X_ij_head.get(arc);
+			v_i = 1;//;algorithm.X_ij_tail.get(arc);
+			v_j = 1;//;algorithm.X_ij_head.get(arc);
 			if(v_i!=0 && v_j!=0){
 				//Add i,j
 				int whereToAdd = point[v_i];

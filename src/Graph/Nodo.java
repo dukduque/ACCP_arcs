@@ -191,7 +191,7 @@ public class Nodo {
 			for (int i = 0; i < MagicIndex.size()*PulseAlgorithm.beam; i++) {
 				arc = PulseAlgorithm.network.getArcs().get(MagicIndex.get(i));
 				if(!arc.isForbiden()){
-					next = arc.getHead();
+					next = arc.get_v_j();
 					path_arcs.add(arc.getId());
 					double nFO = fo + arc.c_ij;
 					int newDutyFightTtime = dayFightTime+ arc.flightTime;
