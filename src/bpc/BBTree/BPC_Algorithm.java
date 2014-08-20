@@ -10,6 +10,7 @@ import java.util.ArrayList;
 
 import Graph.Network;
 import IO.DataHandler;
+import IO.Leg;
 import bpc.CG.CG;
 import bpc.CG.LP_Manager;
 import bpc.CuttingGenerators.SubSetRowInequalities;
@@ -97,6 +98,8 @@ public class BPC_Algorithm {
 //		globalEnv.set(GRB.IntParam.Presolve, 2);
 //		globalEnv.set(GRB.IntParam.Cuts, 3);
 //		globalEnv.set(GRB.DoubleParam.Heuristics, 0.5);
+		
+		
 		baseModel = new GRBModel(globalEnv);
 		CM = new CutsManager();
 		algorithm = new LP_Manager(CM, data, network);
@@ -137,30 +140,30 @@ public class BPC_Algorithm {
 			
 			int  probStatus = cgSolver.runCG(current);
 			
-//			baseModel.getEnv().set(GRB.IntParam.OutputFlag, 1);
-//			cgSolver.solveIPwithLPColumns(current);
-//			algorithm.getMPRelaxSolution(current.model);
-//			current.basicIndexes = new ArrayList<Integer>();
-//			current.basicIndexes.addAll(algorithm.getBasicsIndexes());
-//			current.printSOl(data);
-//			
+			baseModel.getEnv().set(GRB.IntParam.OutputFlag, 1);
+			cgSolver.solveIPwithLPColumns(current);
+			algorithm.getMPRelaxSolution(current.model);
+			current.basicIndexes = new ArrayList<Integer>();
+			current.basicIndexes.addAll(algorithm.getBasicsIndexes());
+			current.printSOl(data);
+	
 
-			branch(probStatus, iter);
+//			branch(probStatus, iter);
 //			current.printCurrentPairings(data);
 			printAdvance(iter);
 			if (activeNodes.size() > 0) {
 				BB_bestbound = activeNodes.get(activeNodes.size() - 1).sortCriteria;
 			}
 			algorithm.cleanModel(current, current.model);
-//			break;
+			break;
 		}
 		
 		
 		System.out.println("SOLVE TO OPTIMALIY!!!!!");
 		System.out.println( " UB: " + BB_primalBound );
-		System.out.println("Optimal Node " + bestNode.id);
-		System.out.println(bestNode.toString(CM));
-		bestNode.printSOl(data);
+//		System.out.println("Optimal Node " + bestNode.id);
+//		System.out.println(bestNode.toString(CM));
+//		bestNode.printSOl(data);
 	}
 
 	
@@ -420,6 +423,11 @@ public class BPC_Algorithm {
 	 */
 	public double getObjVal() {
 		return  BB_primalBound;
+	}
+
+	public ArrayList<Leg> getUncoveredLegs() {
+		ArrayList<Leg> list = current.getUncoveredLegs(data);
+		return list;
 	}
 	
 	

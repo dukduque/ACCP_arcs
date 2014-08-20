@@ -9,7 +9,7 @@ import gurobi.GRB;
 import gurobi.GRBException;
 import gurobi.GRBLinExpr;
 import gurobi.GRBModel;
-import Utilities.VRPTWCG.Rounder;
+import Utilities.Rounder;
 import bpc.BBTree.BBNode;
 import bpc.BBTree.CutsManager;
 import bpc.CG.LP_Manager;
@@ -57,7 +57,7 @@ public class SubSetRowInequalities {
 	}
 	
 	public void buildFS(){
-		point = new int[DataHandler.numLegs+2];
+		point = new int[DataHandler.numLegsToSolve+2];
 		FS_i = new ArrayList<>();
 		FS_j = new ArrayList<>();
 		FS_xij = new ArrayList<>();
@@ -98,12 +98,12 @@ public class SubSetRowInequalities {
 		
 		QnodeSet = new Hashtable<>();
 		QnodeSetKeys = new ArrayList<>();
-		nodeTimesInSet = new int[DataHandler.numLegs+1];
+		nodeTimesInSet = new int[DataHandler.numLegsToSolve+1];
 		
 		marks2 = new int[point.length-1];
 		int[] involved = {-1,-1,-1};
 		int numInvolved = 0;
-		for (int i = 1; i <= DataHandler.numLegs; i++) {
+		for (int i = 1; i <= DataHandler.numLegsToSolve; i++) {
 			marks = new int[point.length-1][point.length-1];
 //			searchCycles(i, i, numInvolved, involved, 3, -1, 0);
 //			marks2[i]=1;
@@ -128,7 +128,7 @@ public class SubSetRowInequalities {
 		visited = new int[point.length-1];
 		int numInvolved = 0;
 		int[] involved = new int [maxSize]; 
-		for (int i = 1; i <= DataHandler.numLegs; i++) {
+		for (int i = 1; i <= DataHandler.numLegsToSolve; i++) {
 //			System.out.println(i);
 //			marks = new int[point.length-1][point.length-1];
 			searchCycles(i, i, numInvolved, involved, minSize, maxSize, -1, 0);
@@ -303,7 +303,7 @@ public class SubSetRowInequalities {
 			updateNoAddedCuts(CM, current);
 		}
 		int number_of_added_cuts=0;
-		int[] QcutsPerNode = new int[DataHandler.numLegs+1];
+		int[] QcutsPerNode = new int[DataHandler.numLegsToSolve+1];
 		for (int i = 0; i < Math.min(Qcurrentkeys.size(),maxCuts); i++) {
 			String name = Qcurrentkeys.get(i);
 //			if(nodesSaturation(QcutsPerNode, QnodeSet.get(name))){
@@ -440,7 +440,7 @@ public class SubSetRowInequalities {
 	private void findSets() {
 		QnodeSet = new Hashtable<>(100000);
 		QnodeSetKeys = new ArrayList<>(10000);
-		int numNodes = DataHandler.numLegs+1;
+		int numNodes = DataHandler.numLegsToSolve+1;
 		for (int i = 1; i < numNodes; i++) {
 			for (int j = i+1; j < numNodes; j++) {
 				for (int k = j+1; k < numNodes; k++) {

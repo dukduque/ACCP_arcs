@@ -6,6 +6,7 @@ public class Leg {
 
 	private String datefrom;
 	private String dateTo;
+	private int week;
 	private String dayWeek;
 	private String airline;
 	private int flightType;
@@ -18,21 +19,23 @@ public class Leg {
 	private String airCraftType;
 	private int nextday;
 	private int localFlight;
-	private int id;
+	private int id_global;
+	private int id_ToSolve;
 	private int oppNodeId;
 	private int arrNodeId;
 	private int depNodeId;
 	
 	
 	
-	public Leg(int id , String datefrom, String dateTo, String dayWeek, String airline,
+	public Leg(int id , String datefrom, String dateTo, int week, String dayWeek, String airline,
 			int flightType, int flightNumer, String from, String to,
 			int departure, int arrive, int secAircraft, String airCraftType,
 			int nextday, int localFlight) {
-		this.setId(id);
+		this.setId_global(id);
 		this.setDatefrom(datefrom);
 		this.setDateTo(dateTo);
 		this.setDayWeek(dayWeek);
+		this.setWeek(week);
 		this.setAirline(airline);
 		this.setFlightType(flightType);
 		this.setFlightNumer(flightNumer);
@@ -44,6 +47,7 @@ public class Leg {
 		this.airCraftType = airCraftType;
 		this.nextday = nextday;
 		this.localFlight = localFlight;
+		
 		
 	}
 
@@ -295,14 +299,30 @@ public class Leg {
 
 
 
-	public int getId() {
-		return id;
+	public int getId_global() {
+		return id_global;
 	}
 
 
 
-	public void setId(int id) {
-		this.id = id;
+	public void setId_global(int id) {
+		this.id_global = id;
+	}
+
+	/**
+	 * @return the id_ToSolve
+	 */
+	public int getId_ToSolve() {
+		return id_ToSolve;
+	}
+
+
+
+	/**
+	 * @param id_ToSolve the id_ToSolve to set
+	 */
+	public void setId_ToSolve(int id_ToSolve) {
+		this.id_ToSolve = id_ToSolve;
 	}
 
 	
@@ -343,6 +363,8 @@ public class Leg {
 
 
 
+
+
 	/**
 	 * @return the depNodeId
 	 */
@@ -364,7 +386,7 @@ public class Leg {
 	@Override
 	public String toString() {
 		// TODO Auto-generated method stub
-		return id + "/" + dayWeek + "/" + flightNumer + "/" + from + "/" + to
+		return id_global + "/" + dayWeek + "/" + flightNumer + "/" + from + "/" + to
 				+ "/" + departure + "/" + arrive + "/"+ airCraftType + "/" + secAircraft;
 	}
 
@@ -380,6 +402,24 @@ public class Leg {
 		} else {
 			System.out.println("Error in Lel update nodes");
 		}
+	}
+
+
+
+	/**
+	 * @return the week
+	 */
+	public int getWeek() {
+		return week;
+	}
+
+
+
+	/**
+	 * @param week the week to set
+	 */
+	public void setWeek(int week) {
+		this.week = week;
 	}
 
 

@@ -1,6 +1,6 @@
 package Graph;
 
-import Utilities.VRPTWCG.Rounder;
+import Utilities.Rounder;
 
 public class Label {
 

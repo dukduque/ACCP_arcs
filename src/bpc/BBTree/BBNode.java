@@ -3,7 +3,7 @@ package bpc.BBTree;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
-import Utilities.VRPTWCG.Rounder;
+import Utilities.Rounder;
 import bpc.CG.LP_Manager;
 import ColumnGenrators.PulseAlgorithm;
 import Graph.Arco;
@@ -377,7 +377,7 @@ public class BBNode {
 //			System.out.println("Pairing " + i);	
 			int[] pilotsPerdayBoolean = new int[8];
 			for (int j = 0; j < pairing.size(); j++) {
-				leg = data.getLegs().get(pairing.get(j));
+				leg = data.getLegsToSolve().get(pairing.get(j));
 				int day = numDay(leg.getDayWeek());
 				if (pilotsPerdayBoolean[day]==0) {
 					pilotsPerdayBoolean[day]= 1;
@@ -392,12 +392,12 @@ public class BBNode {
 				Arco arc = PulseAlgorithm.network.getArcs().get(arcs.get(j));
 				if (arc.getType() == Arco.TYPE_FIGHT) {
 					Nodo tail = arc.get_v_j();
-					leg = data.getLegs().get(tail.getLegId());
+					leg = data.getLegsToSolve().get(tail.getLegId());
 					System.out.println(+i + "/" + leg + "/"+arc.getTypeName());
 //					System.out.println("" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
 				} else if (arc.getType() == Arco.TYPE_DEADHEAD) {
 					Nodo tail = arc.get_v_i();
-					leg = data.getLegs().get(tail.getLegId());
+					leg = data.getLegsToSolve().get(tail.getLegId());
 					System.out.println(i + "/" + leg + "/"+arc.getTypeName());
 //					System.out.println("*" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
 				}else{
@@ -455,7 +455,7 @@ public class BBNode {
 //			System.out.println("Pairing " + i);	
 			int[] pilotsPerdayBoolean = new int[8];
 			for (int j = 0; j < pairing.size(); j++) {
-				leg = data.getLegs().get(pairing.get(j));
+				leg = data.getLegsToSolve().get(pairing.get(j));
 				int day = numDay(leg.getDayWeek());
 				if (pilotsPerdayBoolean[day]==0) {
 					pilotsPerdayBoolean[day]= 1;
@@ -470,12 +470,12 @@ public class BBNode {
 				Arco arc = PulseAlgorithm.network.getArcs().get(arcs.get(j));
 				if (arc.getType() == Arco.TYPE_FIGHT) {
 					Nodo tail = arc.get_v_j();
-					leg = data.getLegs().get(tail.getLegId());
+					leg = data.getLegsToSolve().get(tail.getLegId());
 					System.out.println(+i + "/" + leg + "/"+arc.getTypeName()+"/"+index+"/"+ val);
 //					System.out.println("" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
 				} else if (arc.getType() == Arco.TYPE_DEADHEAD) {
 					Nodo tail = arc.get_v_i();
-					leg = data.getLegs().get(tail.getLegId());
+					leg = data.getLegsToSolve().get(tail.getLegId());
 					System.out.println(i + "/" + leg + "/"+arc.getTypeName()+"/"+index+"/"+ val);
 //					System.out.println("*" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
 				}else{
@@ -491,6 +491,23 @@ public class BBNode {
 			
 		}
 		
+	}
+
+
+	public ArrayList<Leg> getUncoveredLegs(DataHandler data) {
+		ArrayList<Leg> list = new ArrayList<>();
+		Leg leg = null;
+		for (int i = 0; i < basicIndexes.size(); i++) {
+			int index = basicIndexes.get(i);
+			ArrayList<Integer> pairing = LP_Manager.pool.get(index);
+			if (pairing.size() == 1) {
+				leg = data.getLegsToSolve().get(pairing.get(0));
+				System.out.println(i + "/" + leg);
+				list.add(leg);
+			}
+		}
+
+		return list;
 	}
 	
 	

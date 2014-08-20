@@ -66,16 +66,19 @@ public class DataHandler {
 	
 	public static int[] minDutyReplenishTime = { 1440, 1440, 1440 };
 	
+	
 
-	private ArrayList<Leg> legs;
+	private ArrayList<Leg> allLegs;
+	
+	private ArrayList<Leg> legsToSolve;
 	private Hashtable<String, String> bases;
 	
-	public static int numLegs;
+	public static int numLegsToSolve;
 	public static int[] forbidden;
 	
 	
 	public DataHandler(String inputFile) {
-		setLegs(new ArrayList<Leg>());
+		allLegs = new ArrayList<Leg>();
 		bases = new Hashtable<>(20);
 	}
 	
@@ -110,17 +113,13 @@ public class DataHandler {
 	        		String airCraftType = elem.getElementsByTagName("aircraftType").item(0).getTextContent();
 	        		int nextday = Integer.parseInt(elem.getElementsByTagName("nextDay").item(0).getTextContent());
 	        		int localFlight = Integer.parseInt(elem.getElementsByTagName("localFlight").item(0).getTextContent());
-	        		if (dayWeek.equals("LU")  ) {
-	        			Leg l = new Leg(legIndex, datefrom,dateTo,dayWeek,airline,flightType,flightNumer,from,to,departure,arrive,secAircraft,airCraftType,nextday,localFlight);
-		        		legs.add(l);
-		        		bases.put(from, from);
-		        		bases.put(to , to);
-		        		legIndex++;
-//		        		System.out.println(l);
-					}
-//	        		
-	        	}
-	        }
+	        		Leg l = new Leg(legIndex, datefrom,dateTo, 1 , dayWeek,airline,flightType,flightNumer,from,to,departure,arrive,secAircraft,airCraftType,nextday,localFlight);
+					allLegs.add(l);
+					bases.put(from, from);
+					bases.put(to, to);
+					legIndex++;
+				}
+			}
 		}catch (SAXParseException err) {
 	        System.out.println ("** Parsing error" + ", line "+ err.getLineNumber () + ", uri " + err.getSystemId ());
 	           System.out.println(" " + err.getMessage ());
@@ -131,7 +130,6 @@ public class DataHandler {
 	     }catch (Throwable t) {
 	           t.printStackTrace ();
 	     }
-		numLegs = legs.size();
 		updateBases();
 	}
 
@@ -144,22 +142,52 @@ public class DataHandler {
 	}
 
 
-
-
-	public ArrayList<Leg> getLegs() {
-		return legs;
+	public ArrayList<Leg> getLegsToSolve() {
+		return legsToSolve;
 	}
 
-	public void setLegs(ArrayList<Leg> legs) {
-		this.legs = legs;
+	public void setLegsToSolve(ArrayList<Leg> legs) {
+		this.legsToSolve = legs;
 	}
-
-
 
 
 	public Hashtable<String, String> getBases() {
-		// TODO Auto-generated method stub
 		return bases;
 	}
-		
+
+	/**
+	 * @return the allLegs
+	 */
+	public ArrayList<Leg> getAllLegs() {
+		return allLegs;
+	}
+
+	/**
+	 * @param allLegs the allLegs to set
+	 */
+	public void setAllLegs(ArrayList<Leg> allLegs) {
+		this.allLegs = allLegs;
+	}
+
+	public void buildInstanceForSolvingDay(String solving_day, ArrayList<Leg> remainingLegs) {
+		legsToSolve = new ArrayList<>();
+		int indexToSolve= 0;
+		if (remainingLegs!=null) {
+			for (int i = 0; i <remainingLegs.size(); i++) {
+				Leg l = remainingLegs.get(i);
+				l.setId_ToSolve(indexToSolve);
+				legsToSolve.add(l);	
+				indexToSolve++;
+			}
+		}
+		for (int i = 0; i < allLegs.size(); i++) {
+			Leg l = allLegs.get(i);
+			if(l.getDayWeek().equals(solving_day)){
+				l.setId_ToSolve(indexToSolve);
+				legsToSolve.add(l);	
+				indexToSolve++;
+			}
+		}
+		numLegsToSolve = legsToSolve.size();
+	}
 }

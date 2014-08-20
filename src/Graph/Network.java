@@ -71,7 +71,7 @@ public class Network {
 	/**
 	 * Metodo contructor
 	 */
-	public Network(ArrayList<Leg> legs, Hashtable<String, String> bases , int crewMemeber) {
+	public Network(ArrayList<Leg> legsToSolve, Hashtable<String, String> bases , int crewMemeber , ArrayList<Leg> allLegs ) {
 		// Crea el arreglo de nodos
 		nodes_graph = new ArrayList<Nodo>();
 		arc_graph = new ArrayList<Arco>();
@@ -80,13 +80,13 @@ public class Network {
 		baseStations = new ArrayList<String>();
 		
 		loadBaseStations();
-		createNodes(legs, bases);
+		createNodes(legsToSolve, bases);
 		Sort(nodes_graph);
 		
 		for (int i = 0; i < nodes_graph.size(); i++) {
 			nodes_graph.get(i).id = i;
 			if (nodes_graph.get(i).getLegId() >= 0) {
-				legs.get(nodes_graph.get(i).getLegId()).updateNodesRepresentation(nodes_graph.get(i));
+				legsToSolve.get(nodes_graph.get(i).getLegId()).updateNodesRepresentation(nodes_graph.get(i));
 			}
 		}
 		
@@ -151,11 +151,12 @@ public class Network {
 			int secAircraft = l.getSecAircraft();
 			String airCraftType = l.getAirCraftType();
 			int nextday = l.getNextday();
+			int week = l.getWeek();
 			
     		//Node that represents the opportunity of beginning the duty with this fight
-    		Nodo ltemp1 = new Nodo((i + 1), flightNumer, dayWeek, 1,from, bases.get(from), departure , secAircraft, airCraftType, nextday, Nodo.NODE_TYPE_OPP, l.getId());
+    		Nodo ltemp1 = new Nodo((i + 1), flightNumer, dayWeek, week,from, bases.get(from), departure , secAircraft, airCraftType, nextday, Nodo.NODE_TYPE_OPP, l.getId_ToSolve());
 			//Node that represents the departure of the fight
-    		Nodo ltemp2 = new Nodo((i + 1), flightNumer, dayWeek, 1,from, bases.get(from) ,departure,  secAircraft, airCraftType, nextday, Nodo.NODE_TYPE_DEP,l.getId());
+    		Nodo ltemp2 = new Nodo((i + 1), flightNumer, dayWeek, week,from, bases.get(from) ,departure,  secAircraft, airCraftType, nextday, Nodo.NODE_TYPE_DEP,l.getId_ToSolve());
 			if(!stations.containsKey(from)){
 				stations.put(from, new Station(from));
 				stations_keys.add(from);
@@ -164,7 +165,7 @@ public class Network {
 			stations.get(from).DepNodes.add(ltemp2);
 	        		
 			//Node that represents the arrival of the fight
-    		Nodo ltemp3 = new Nodo((i + 1), flightNumer, dayWeek, 1,to, bases.get(to) , arrive,  secAircraft, airCraftType, nextday, Nodo.NODE_TYPE_ARR,l.getId());
+    		Nodo ltemp3 = new Nodo((i + 1), flightNumer, dayWeek, week,to, bases.get(to) , arrive,  secAircraft, airCraftType, nextday, Nodo.NODE_TYPE_ARR,l.getId_ToSolve());
     		if(!stations.containsKey(to)){
 				stations.put(to, new Station(to));
 				stations_keys.add(to);
@@ -395,6 +396,7 @@ public class Network {
 				return arc;
 			}
 		}
+		
 		return null;
 	}
 

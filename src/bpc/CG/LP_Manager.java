@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Random;
 
-import Utilities.VRPTWCG.Rounder;
+import Utilities.Rounder;
 import bpc.BBTree.BBNode;
 import bpc.BBTree.BPC_Algorithm;
 import bpc.BBTree.CutsManager;
@@ -116,7 +116,9 @@ public class LP_Manager {
 	 */
 	public int MPvars;
 	
-	// MP GRB variables
+	/**
+	 * GRB variables of the master problem
+	 */
 	private ArrayList<GRBVar> mp_vars;
 	
 	//Stabilization
@@ -184,7 +186,7 @@ public class LP_Manager {
 
 
 	public void initializePool() {
-		ArrayList<Leg> legs = data.getLegs();
+		ArrayList<Leg> legs = data.getLegsToSolve();
 		for (int i = 0; i < legs.size(); i++) {
 			ArrayList<Integer> dummyPath = new ArrayList<>();
 			dummyPath.add(i);
@@ -202,8 +204,8 @@ public class LP_Manager {
 		realFO= new GRBLinExpr();
 		
 		// Stabilization variables
-		y_minus = new GRBVar[data.getLegs().size()];
-		y_plus = new GRBVar[data.getLegs().size()];
+		y_minus = new GRBVar[data.getLegsToSolve().size()];
+		y_plus = new GRBVar[data.getLegsToSolve().size()];
 		initializeStabilizationParameters();
 		
 		//Master problem variables
@@ -219,7 +221,7 @@ public class LP_Manager {
 		model.update();
 		
 		//Add constraints
-		ArrayList<Leg> legs = data.getLegs();
+		ArrayList<Leg> legs = data.getLegsToSolve();
 		for (int j = 0; j < legs.size(); j++) {
 			y_minus[j] = model.addVar(0, e_minus[j], -d_minus[j] ,GRB.CONTINUOUS,"y-"+j);
 			y_plus[j] = model.addVar(0, e_plus[j], d_plus[j] , GRB.CONTINUOUS,"y+"+j);
@@ -248,11 +250,11 @@ public class LP_Manager {
 	
 	public void initializeStabilizationParameters() {
 		boxlengh = CG.stabilize?0.01:Double.POSITIVE_INFINITY;
-		d_plus = new double [data.getLegs().size()];
-		d_minus = new double [data.getLegs().size()];
-		e_minus = new double [data.getLegs().size()];
-		e_plus = new double [data.getLegs().size()];
-		boxcenter = new double[data.getLegs().size()];
+		d_plus = new double [data.getLegsToSolve().size()];
+		d_minus = new double [data.getLegsToSolve().size()];
+		e_minus = new double [data.getLegsToSolve().size()];
+		e_plus = new double [data.getLegsToSolve().size()];
+		boxcenter = new double[data.getLegsToSolve().size()];
 		for (int i = 0; i < d_plus.length; i++) {
 			d_minus[i] = CG.stabilize?0.02:0;
 			d_plus[i] =CG.stabilize?0.03:0;
@@ -266,7 +268,7 @@ public class LP_Manager {
 
 
 	public int runMP(BBNode currentNode, GRBModel model) throws GRBException {
-		int n = data.getLegs().size();
+		int n = data.getLegsToSolve().size();
 		pi = new double[n];
 		
 		//Create new variables and add them to the model
@@ -336,7 +338,7 @@ public class LP_Manager {
 		
 		double lambda = 0.2;
 		
-		for (int i = 0; i < DataHandler.numLegs; i++) {
+		for (int i = 0; i < DataHandler.numLegsToSolve; i++) {
 			
 			if (pi[i] >= d_plus[i]) {
 				boxcenter[i] = pi[i] * lambda + (1 - lambda) * boxcenter[i];
@@ -434,7 +436,7 @@ public class LP_Manager {
 			try {
 				 rc = mp_vars.get(i).get(GRB.DoubleAttr.RC);
 			} catch (Exception e) {
-				System.out.println("La variable que jode es la " + i + " hay en el pool: " + pool.size()+"el prob status es igual " + model.get(GRB.IntAttr.Status));
+//				System.out.println("La variable que jode es la " + i + " hay en el pool: " + pool.size()+"el prob status es igual " + model.get(GRB.IntAttr.Status));
 			}
 
 			double val = mp_vars.get(i).get(GRB.DoubleAttr.X);
@@ -568,7 +570,7 @@ public class LP_Manager {
 		double shift=0.0;
 		String cutname;
 		int cutType = -1;
-		for (int i = DataHandler.numLegs; i < model.getConstrs().length; i++) {
+		for (int i = DataHandler.numLegsToSolve; i < model.getConstrs().length; i++) {
 			cutname = model.getConstrs()[i].get(GRB.StringAttr.ConstrName);
 			cutType = CM.cutType.get(cutname);
 			if(cutType==CM.VEHICLES_CUT ){
@@ -625,7 +627,8 @@ public class LP_Manager {
 					if (varVal < 1 && varVal > 0
 							&& Math.abs(varVal - centerVal) < minDesVsdest
 							&& network.getArc(testing_arc_id).get_v_i().id != Network.source
-							&& network.getArc(testing_arc_id).get_v_j().id != Network.sink){
+							&& network.getArc(testing_arc_id).get_v_j().id != Network.sink
+							&& network.getArc(testing_arc_id).get_v_j().getTime()!=Nodo.NODE_TYPE_OPP){
 //							&& X_ij_arc.get(strInd).getType()!=Arco.TYPE_FIGHT
 //							&& X_ij_arc.get(strInd).getType()==Arco.TYPE_DEADHEAD) {
 						minDesVsdest =Math.abs(varVal - centerVal) ; 
@@ -711,7 +714,7 @@ public class LP_Manager {
 	 */
 	public void cleanModel( BBNode currentNode ,GRBModel model) throws GRBException {
 		int numConts = model.getConstrs().length;
-		for (int i = numConts-1; i >=DataHandler.numLegs; i--) {
+		for (int i = numConts-1; i >=DataHandler.numLegsToSolve; i--) {
 			GRBConstr crt= model.getConstr(i);
 			model.remove(crt);
 		}
@@ -872,7 +875,14 @@ public class LP_Manager {
 			y_minus[i].set(GRB.DoubleAttr.UB, 0);
 			y_plus[i].set(GRB.DoubleAttr.UB, 0);
 		}
-		
+	}
+	
+	public ArrayList<GRBVar> getMPvars(){
+		return mp_vars;
+	}
+	
+	public GRBVar getMPvar(int index){
+		return mp_vars.get(index);
 	}
 	
 }

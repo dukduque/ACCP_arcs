@@ -11,7 +11,7 @@ import java.util.Hashtable;
 import ColumnGenrators.PulseAlgorithm;
 import Graph.Network;
 import IO.DataHandler;
-import Utilities.VRPTWCG.Rounder;
+import Utilities.Rounder;
 import bpc.BBTree.BBNode;
 import bpc.BBTree.BPC_Algorithm;
 import bpc.BBTree.CutsManager;
@@ -129,8 +129,8 @@ public class CG {
 
 		public  void solveIPwithLPColumns(BBNode currentNode) throws GRBException {
 		algorithm.disableStabilization();
-		for (int i = 0; i < currentNode.model.getVars().length; i++) {
-			currentNode.model.getVars()[i].set(GRB.CharAttr.VType, GRB.BINARY);
+		for (int i = 0; i <	algorithm.getMPvars().size(); i++) {
+			algorithm.getMPvar(i).set(GRB.CharAttr.VType, GRB.BINARY);
 		}
 		currentNode.model.update();
 		currentNode.model.optimize();
