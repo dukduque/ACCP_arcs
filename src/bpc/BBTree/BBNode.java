@@ -383,8 +383,10 @@ public class BBNode {
 					pilotsPerdayBoolean[day]= 1;
 					pilotsPerday[day]++;
 				}
-				if(pairing.size()==1)
-				System.out.println(i+ "/" + leg);
+				if(pairing.size()==1){
+					System.out.println(i+ "/" + leg);
+					pilotsPerday[day]--;
+				}
 			}
 //			System.out.println("Y CON EL DEADHEAD");
 			ArrayList<Integer> arcs = LP_Manager.pool_of_arcs.get(index);
@@ -393,13 +395,11 @@ public class BBNode {
 				if (arc.getType() == Arco.TYPE_FIGHT) {
 					Nodo tail = arc.get_v_j();
 					leg = data.getLegsToSolve().get(tail.getLegId());
-					System.out.println(+i + "/" + leg + "/"+arc.getTypeName());
-//					System.out.println("" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
+//					System.out.println(+i + "/" + leg + "/"+arc.getTypeName());
 				} else if (arc.getType() == Arco.TYPE_DEADHEAD) {
 					Nodo tail = arc.get_v_i();
 					leg = data.getLegsToSolve().get(tail.getLegId());
-					System.out.println(i + "/" + leg + "/"+arc.getTypeName());
-//					System.out.println("*" + i + " " + arc + " In: " + arc.getTail().getStation() + " " + arc.getHead().getStation());
+//					System.out.println(i + "/" + leg + "/"+arc.getTypeName());
 				}else{
 //					System.out.println(i +"/"+ arc.getTail().getTypeString()
 //							+"/"+ arc.getHead().getTypeString() 
@@ -502,7 +502,7 @@ public class BBNode {
 			ArrayList<Integer> pairing = LP_Manager.pool.get(index);
 			if (pairing.size() == 1) {
 				leg = data.getLegsToSolve().get(pairing.get(0));
-				System.out.println(i + "/" + leg);
+//				System.out.println(i + "/" + leg);
 				list.add(leg);
 			}
 		}

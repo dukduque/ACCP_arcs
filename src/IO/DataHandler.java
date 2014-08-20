@@ -14,6 +14,8 @@ import org.w3c.dom.NodeList;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 
+import Utilities.Dates;
+
 
 public class DataHandler {
 	
@@ -130,6 +132,7 @@ public class DataHandler {
 	     }catch (Throwable t) {
 	           t.printStackTrace ();
 	     }
+		System.out.println("Total flights: " + allLegs.size());
 		updateBases();
 	}
 
@@ -176,13 +179,19 @@ public class DataHandler {
 			for (int i = 0; i <remainingLegs.size(); i++) {
 				Leg l = remainingLegs.get(i);
 				l.setId_ToSolve(indexToSolve);
+				int solveingDay = Dates.convertStrDayToIntDay(solving_day);
+				int legDay = Dates.convertStrDayToIntDay(l.getDayWeek());
+				if(solveingDay -legDay == 6){
+					l.setWeek(l.getWeek()+1);
+				}
+				
 				legsToSolve.add(l);	
 				indexToSolve++;
 			}
 		}
 		for (int i = 0; i < allLegs.size(); i++) {
 			Leg l = allLegs.get(i);
-			if(l.getDayWeek().equals(solving_day)){
+			if(l.getDayWeek().equals(solving_day) || solving_day.equals("ALL")){
 				l.setId_ToSolve(indexToSolve);
 				legsToSolve.add(l);	
 				indexToSolve++;

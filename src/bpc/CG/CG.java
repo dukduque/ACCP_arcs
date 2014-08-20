@@ -224,9 +224,9 @@ public class CG {
 				pulse.run(currentNode, false);
 				totalHeuPulseTime += System.currentTimeMillis()-tnowPulse;
 				long tend1 = System.currentTimeMillis();
-				System.out.println("ITER "+iter+" PoolSize "+algorithm.pool.size()+" FO: "+algorithm.aBound+ " \tOrgFO: " +algorithm.getOriginalFOValue() +
-						"\tRC: "+minRC+  "  TIME : " + (tend1-algorithm.tnow)/1000.0 
-						+ " \tMP: " + totalMPTime/1000.0 + " SP: " + totalHeuPulseTime/1000.0 + " \tphase I:" + phaseI+ " stab: " + stabilize);
+//				System.out.println("ITER "+iter+" PoolSize "+algorithm.pool.size()+" FO: "+algorithm.aBound+ " \tOrgFO: " +algorithm.getOriginalFOValue() +
+//						"\tRC: "+minRC+  "  TIME : " + (tend1-algorithm.tnow)/1000.0 
+//						+ " \tMP: " + totalMPTime/1000.0 + " SP: " + totalHeuPulseTime/1000.0 + " \tphase I:" + phaseI+ " stab: " + stabilize);
 			}
 			else {
 				exactP ++;
