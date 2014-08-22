@@ -23,6 +23,7 @@ public class MainACPC {
 			data.ReadXLM(inputFile);
 			
 			String[] days = { "LU", "MA", "MI", "JU", "VI", "SA", "DO" };
+//			String[] days = {"ALL"};
 			ArrayList<Leg> remainingLegs = null;
 			for (int i = 0; i < days.length; i++) {
 				

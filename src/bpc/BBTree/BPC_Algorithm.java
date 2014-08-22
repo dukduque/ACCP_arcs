@@ -91,7 +91,7 @@ public class BPC_Algorithm {
 		globalEnv = new GRBEnv(null);
 		globalEnv.set(GRB.IntParam.OutputFlag, 0);
 		globalEnv.set(GRB.DoubleParam.MIPGap, 0.05);
-		globalEnv.set(GRB.DoubleParam.TimeLimit, 300);
+		globalEnv.set(GRB.DoubleParam.TimeLimit, 600);
 //		globalEnv.set(GRB.IntParam.MIPFocus, 3);
 //		globalEnv.set(GRB.IntParam.Method, 1);
 		globalEnv.set(GRB.IntParam.Threads, 2);
@@ -99,7 +99,7 @@ public class BPC_Algorithm {
 //		globalEnv.set(GRB.IntParam.Cuts, 3);
 //		globalEnv.set(GRB.DoubleParam.Heuristics, 0.5);
 		
-		
+	
 		baseModel = new GRBModel(globalEnv);
 		CM = new CutsManager();
 		algorithm = new LP_Manager(CM, data, network);

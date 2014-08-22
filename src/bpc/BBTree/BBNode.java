@@ -395,11 +395,11 @@ public class BBNode {
 				if (arc.getType() == Arco.TYPE_FIGHT) {
 					Nodo tail = arc.get_v_j();
 					leg = data.getLegsToSolve().get(tail.getLegId());
-//					System.out.println(+i + "/" + leg + "/"+arc.getTypeName());
+					System.out.println(+i + "/" + leg + "/"+arc.getTypeName());
 				} else if (arc.getType() == Arco.TYPE_DEADHEAD) {
 					Nodo tail = arc.get_v_i();
 					leg = data.getLegsToSolve().get(tail.getLegId());
-//					System.out.println(i + "/" + leg + "/"+arc.getTypeName());
+					System.out.println(i + "/" + leg + "/"+arc.getTypeName());
 				}else{
 //					System.out.println(i +"/"+ arc.getTail().getTypeString()
 //							+"/"+ arc.getHead().getTypeString() 

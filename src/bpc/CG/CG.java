@@ -41,7 +41,7 @@ public class CG {
 	double phase1bound;
 	int phase1pool;
 	
-	public static final double rcCriteriaHeuristics = -0.01;
+	public static final double rcCriteriaHeuristics = -0.1;
 	public static final double rcCriteriaExact = -0.01;
 	
 	/**
@@ -234,9 +234,9 @@ public class CG {
 				pulse.run(currentNode, true);
 				totalExactPulseTime += System.currentTimeMillis()-tnowPulse;
 				long tend1 = System.currentTimeMillis();
-				System.out.println("ITER "+iter+" PoolSize "+algorithm.pool.size()+" FO: "+algorithm.aBound+ " \tOrgFO: " +algorithm.getOriginalFOValue() +
-						"\tRC: "+minRC+  "  TIME : " + (tend1-algorithm.tnow)/1000.0 
-						+ " \tMP: " + totalMPTime/1000.0 + " SP: " + totalExactPulseTime/1000.0 + " \tphase I:" + phaseI+ " stab: " + stabilize);
+//				System.out.println("ITER "+iter+" PoolSize "+algorithm.pool.size()+" FO: "+algorithm.aBound+ " \tOrgFO: " +algorithm.getOriginalFOValue() +
+//						"\tRC: "+minRC+  "  TIME : " + (tend1-algorithm.tnow)/1000.0 
+//						+ " \tMP: " + totalMPTime/1000.0 + " SP: " + totalExactPulseTime/1000.0 + " \tphase I:" + phaseI+ " stab: " + stabilize);
 			}
 		}
 		
